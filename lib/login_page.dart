@@ -31,8 +31,8 @@ class _LoginPageState extends State<LoginPage> {
     //Map<String, String> headers = new Map<String, String>();
     //headers["Content-type"] = "application/json";
     //headers["Accept"] = "application/json";
-
     //String str = '{"email":"${ctrEmail.text}", "password","${ctrPass.text}"}';
+    
     final res = await http.post(
       "http://978952d9.ngrok.io/login",
       body: {
@@ -97,7 +97,8 @@ class _LoginPageState extends State<LoginPage> {
           minWidth: 200.0,
           height: 42.0,
           onPressed: () {
-            _login();
+            //_login();
+            Navigator.of(context).pushNamed(HomePage.tag);
           },
           color: Colors.lightBlueAccent,
           child: Text("Log In", style: TextStyle(color: Colors.white)),
