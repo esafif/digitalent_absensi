@@ -40,6 +40,8 @@ flutter:
 
   assets:
   - img/logo.png
+  - img/ihsan.jpg
+  - img/ichsan.jpg
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

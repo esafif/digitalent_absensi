@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:digitalent_absensi/employee.dart';
 
 class HomePage extends StatelessWidget {
   static String tag = 'home-page';
@@ -63,6 +64,7 @@ class HomePage extends StatelessWidget {
                       fit: BoxFit.cover)),
             ),
             new ListTile(
+              onTap: ()=> Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context)=> new employee())),
               title: Text("Employee"),
               trailing: Icon(Icons.people),
             ),
