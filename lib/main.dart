@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'home_page.dart';
 import 'employee.dart';
+import 'absensi_today.dart';
 
 void main() => runApp(MyApp());
 
@@ -10,7 +11,8 @@ class MyApp extends StatelessWidget {
   final routes = <String, WidgetBuilder>{
     LoginPage.tag: (context)=>LoginPage(),
     HomePage.tag: (context)=>HomePage(),
-    employee.tag: (context)=> employee()
+    employee.tag: (context)=> employee(),
+    absensiToday.tag: (context) =>absensiToday(),
   };
 
   // This widget is the root of your application.

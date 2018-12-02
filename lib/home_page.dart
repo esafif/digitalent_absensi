@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:digitalent_absensi/employee.dart';
+import 'package:digitalent_absensi/absensi_today.dart';
+import 'package:digitalent_absensi/log_absensi.dart';
+import 'package:digitalent_absensi/notify.dart';
 
 class HomePage extends StatelessWidget {
   static String tag = 'home-page';
@@ -21,9 +24,9 @@ class HomePage extends StatelessWidget {
     padding: EdgeInsets.only(top: 30.0),
     child:Row(
       children: <Widget>[
-        new Iconteks(icon: Icons.people, teks: "Absen Today"),
-        new Iconteks(icon: Icons.timeline, teks: "Log Absen"),
-        new Iconteks(icon: Icons.notifications, teks: "Notification"),
+        new Iconteks(icon: Icons.people, teks: "Absen Today", route: new absensiToday(),),
+        new Iconteks(icon: Icons.timeline, teks: "Log Absen",route: new logAbsensi()),
+        new Iconteks(icon: Icons.notifications, teks: "Notification", route: new notifyAbsen()),
       ],
     ),
   );
@@ -98,13 +101,15 @@ class HomePage extends StatelessWidget {
 }
 
 class Iconteks extends StatelessWidget {
-  Iconteks({this.icon, this.teks});
+  Iconteks({this.icon, this.teks, this.route});
   final IconData icon;
   final String teks;
+  final route;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return FlatButton(
+      onPressed: ()=> Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context)=> route)),
       child: Column(
         children: <Widget>[
           Icon(
@@ -114,8 +119,8 @@ class Iconteks extends StatelessWidget {
           ),
           Text(
             teks,
-            style: TextStyle(fontSize: 15.0, color: Colors.grey[800]),
-          )
+            style: TextStyle(fontSize: 13.0, color: Colors.grey[800]),
+          ),
         ],
       ),
     );
