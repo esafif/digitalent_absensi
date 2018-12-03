@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalent_absensi/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -10,20 +10,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final GlobalKey<ScaffoldState> _scaffoldState =
-      new GlobalKey<ScaffoldState>();
+  var url = "http://04ce791f.ngrok.io/";
 
-  void _snackbar(String str) {
-    if (str.isEmpty) return;
-    _scaffoldState.currentState.showSnackBar(new SnackBar(
-      content: new Text(
-        str,
-        style: TextStyle(fontSize: 20.0),
-      ),
-      duration: new Duration(seconds: 4),
-    ));
-  }
-
+  SharedPreferences pref;
+  //ctrl textfield
   TextEditingController ctrEmail = new TextEditingController();
   TextEditingController ctrPass = new TextEditingController();
 
@@ -32,9 +22,9 @@ class _LoginPageState extends State<LoginPage> {
     //headers["Content-type"] = "application/json";
     //headers["Accept"] = "application/json";
     //String str = '{"email":"${ctrEmail.text}", "password","${ctrPass.text}"}';
-    
+
     final res = await http.post(
-      "http://978952d9.ngrok.io/login",
+      "${url}login",
       body: {
         "email":ctrEmail.text,
         "password":ctrPass.text
@@ -42,18 +32,53 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     //final resget = await http.get("http://978952d9.ngrok.io/getpegawai");
-
     var datauser = json.decode(res.body);
-
-    print(datauser);
-
+   
     if (datauser.length == 0) {
       setState(() {
-        _snackbar("Akun tidak terdaftar");
+        _alertdialog("Akun tidak terdaftar");
       });
     } else {
+      List<Pegawai> listpegawai= [];   
+      for(var u in datauser){
+        Pegawai peg = Pegawai(u['nip'], u['nama'], u['alamat'], u['jabatan'], u['desk_kerja'], u['jenis_kelamin'], u['status_absen'], u['email'], u['password']);
+        listpegawai.add(peg);
+      }
+
+      String nipInstance =  listpegawai[0].nip.toString();
+      String namaInstance = listpegawai[0].nama.toString();
+      String emailInstance = listpegawai[0].email.toString();
+
+      pref = await SharedPreferences.getInstance();
+      pref.setString("nip", nipInstance);
+      pref.setString("nama", namaInstance);
+      pref.setString("email", emailInstance);
+      pref.setString("url", url);
+      pref.commit();
+
       Navigator.pushReplacementNamed(context, HomePage.tag);
     }
+  }
+
+  void _alertdialog(String str) {
+    if (str.isEmpty) return;
+
+    AlertDialog alertDialog = new AlertDialog(
+      content: new Text(
+        str,
+        style: new TextStyle(fontSize: 20.0),
+      ),
+      actions: <Widget>[
+        new RaisedButton(
+          color: Colors.lightBlue[400],
+          child: new Text("Ok", style: new TextStyle(color: Colors.black),),
+          onPressed: (){
+            Navigator.pop(context);
+          },
+        )
+      ],
+    );
+    showDialog(context: context, child: alertDialog);
   }
 
   @override
@@ -97,8 +122,8 @@ class _LoginPageState extends State<LoginPage> {
           minWidth: 200.0,
           height: 42.0,
           onPressed: () {
-            //_login();
-            Navigator.of(context).pushNamed(HomePage.tag);
+            _login();
+            //Navigator.of(context).pushNamed(HomePage.tag);
           },
           color: Colors.lightBlueAccent,
           child: Text("Log In", style: TextStyle(color: Colors.white)),
@@ -146,4 +171,18 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+}
+
+class Pegawai {
+  final int nip;
+  final String nama;
+  final String alamat;
+  final String jabatan;
+  final String desk_kerja;
+  final String jenis_kelamin;
+  final int status_absen;
+  final String email;
+  final String password;
+
+  Pegawai(this.nip, this.nama, this.alamat, this.jabatan, this.desk_kerja, this.jenis_kelamin, this.status_absen, this.email, this.password);
 }

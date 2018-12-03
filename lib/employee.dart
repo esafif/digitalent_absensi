@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class employee extends StatefulWidget {
   static String tag = 'employee';
@@ -6,20 +9,38 @@ class employee extends StatefulWidget {
 }
 
 class _employeeState extends State<employee> {
+  var url = "http://04ce791f.ngrok.io/";
   List<Container> daftarEmployee = new List();
 
-  var employee = [
-    {"nama": "Ichsan", "foto": "ichsan.jpg", "jabatan": "AI ENGINEER"},
-    {"nama": "Ihsan", "foto": "ihsan.jpg", "jabatan": "UI/UX"}
-  ];
+  List datajson;
+  Future<List> ambildata() async {
+    final hasil = await http.get(
+      "${url}getpegawai",
+    );
 
-  _listEmployee() async {
-    for (var i = 0; i < employee.length; i++) {
-      final emp = employee[i];
-      final String foto = emp["foto"];
+    this.setState(() {
+      datajson = json.decode(hasil.body);
+    });
+  }
 
-      daftarEmployee.add(new Container(
-        child: new Card(
+@override
+  void initState() {
+    this.ambildata();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: new AppBar(
+          title: Text("Data Employee"),
+          backgroundColor: Colors.lightBlue[600],
+        ),
+        body: new ListView.builder(
+          itemCount: datajson == null ? 0 : datajson.length,
+          itemBuilder: (context, i){
+            return new Container(
+              child: new Card(
           child: new Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
@@ -30,14 +51,14 @@ class _employeeState extends State<employee> {
                     padding: new EdgeInsets.all(5.0),
                   ),
                   new Hero(
-                    tag: emp['nama'],
+                    tag: datajson[i]["nip"],
                     child: new Material(
                       child: new InkWell(
                         onTap: () {},
-                        child: new Image.asset(
-                          "img/$foto",
-                          height: 140.0,
-                          width: 120.0,
+                        child: new Image.network(
+                          "${url}static/fp/${datajson[i]['nip']}.jpg",
+                          height: 120.0,
+                          width: 100.0,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -49,13 +70,15 @@ class _employeeState extends State<employee> {
                   new Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
+                      Padding (padding: new EdgeInsets.only(top: 10.0),),
                       new Text(
-                        emp['nama'],
-                        style: new TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                        datajson[i]["nama"],
+                        style: new TextStyle(
+                            fontSize: 15.0, fontWeight: FontWeight.bold),
                       ),
                       new Text(
-                        emp['jabatan'],
-                        style: new TextStyle(fontSize: 12.0),
+                        datajson[i]["jabatan"],
+                        style: new TextStyle(fontSize: 13.0),
                       ),
                     ],
                   ),
@@ -64,24 +87,8 @@ class _employeeState extends State<employee> {
             ],
           ),
         ),
-      ));
-    }
-  }
-
-  void initState() {
-    _listEmployee();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: new AppBar(
-          title: Text("Data Employee"),
-          backgroundColor: Colors.lightBlue[600],
-        ),
-        body: new ListView(
-          children: daftarEmployee,
+            );
+          },
         ));
   }
 }
