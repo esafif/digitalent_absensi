@@ -75,12 +75,38 @@ class HomePageState extends State<HomePage> {
     request.files.add(multipartfile);
     request.fields["nip"] = drawNip;
 
-    var response = await request.send();
+    http.StreamedResponse response = await request.send();
     if(response.statusCode == 200){
-      print("Image Uploaded");
+      
     }else{
       print("Image Fail");
     }
+  }
+
+  void _showDialogAbsensi(String str){
+    showDialog(
+      context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          content: new Text(
+            str,
+            style: new TextStyle(fontSize: 18.0),
+          ),
+          actions: <Widget>[
+             new RaisedButton(
+                color: Colors.grey[400],
+                child: new Text(
+                  "Ok",
+                  style: new TextStyle(color: Colors.black),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+          ],
+        );
+      }
+    );
   }
 
   void _showDialog() {
@@ -90,7 +116,7 @@ class HomePageState extends State<HomePage> {
           return AlertDialog(
             content: new Text(
               "Apa anda akan melakukan proses absensi?",
-              style: new TextStyle(fontSize: 20.0),
+              style: new TextStyle(fontSize: 18.0),
             ),
             actions: <Widget>[
               new RaisedButton(
@@ -111,6 +137,7 @@ class HomePageState extends State<HomePage> {
                 ),
                 onPressed: () {
                   getImage();
+                  Navigator.pop(context);
                 },
               ),
             ],
