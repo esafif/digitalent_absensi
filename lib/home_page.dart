@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -28,13 +30,36 @@ class HomePageState extends State<HomePage> {
   String drawNip;
   String drawName;
   String drawEmail;
+  int kondisi;
   File _image;
+
+  
+  Color color_btn_absensi;
+  IconData icon_btn_absensi;
+
+  color_btn() {
+    if (kondisi == 1) {
+      color_btn_absensi = Colors.green[800];
+    } else {
+      color_btn_absensi = Colors.orange[300];
+    }
+    return color_btn_absensi;
+  }
+
+  icon_btn() {
+    if (kondisi == 1) {
+      icon_btn_absensi = Icons.exit_to_app;
+    } else {
+      icon_btn_absensi = Icons.alarm_on;
+    }
+    return icon_btn_absensi;
+  }
 
   void initState() {
     super.initState();
     getCredential();
   }
-
+  
   getCredential() async {
     prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -42,6 +67,7 @@ class HomePageState extends State<HomePage> {
       drawName = prefs.getString("nama");
       drawEmail = prefs.getString("email");
       url = prefs.getString("url");
+      kondisi = prefs.getInt("status_absen");
     });
   }
 
@@ -55,7 +81,7 @@ class HomePageState extends State<HomePage> {
     img.Image smallerimg = img.copyResize(image, 500);
 
     var compressimg = new File("$path/img_$drawNip.jpeg")
-    ..writeAsBytesSync(img.encodeJpg(smallerimg, quality: 85));
+      ..writeAsBytesSync(img.encodeJpg(smallerimg, quality: 85));
 
     setState(() {
       _image = compressimg;
@@ -64,36 +90,41 @@ class HomePageState extends State<HomePage> {
     });
   }
 
-  Future upload(File imageFile) async{
-    var stream = new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+  Future upload(File imageFile) async {
+    var stream =
+        new http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
     var length = await imageFile.length();
     var uri = Uri.parse("${url}absensi");
 
     var request = new http.MultipartRequest("POST", uri);
-    var multipartfile = new http.MultipartFile("photo", stream, length, filename: pth.basename(imageFile.path));
+    var multipartfile = new http.MultipartFile("photo", stream, length,
+        filename: pth.basename(imageFile.path));
 
     request.files.add(multipartfile);
     request.fields["nip"] = drawNip;
 
     http.StreamedResponse response = await request.send();
-    if(response.statusCode == 200){
-      
-    }else{
-      print("Image Fail");
+    if (response.statusCode == 200) {
+      _showDialogAbsensi("Status absensi berhasil");
+      prefs.setInt("status_absen", 1);
+      prefs.commit();
+      Navigator.pushNamed(context, HomePage.tag);
+    } else if (response.statusCode == 417) {
+      _showDialogAbsensi("Ini bukan wajah $drawName");
     }
   }
 
-  void _showDialogAbsensi(String str){
+  void _showDialogAbsensi(String str) {
     showDialog(
-      context: context,
-      builder: (BuildContext context){
-        return AlertDialog(
-          content: new Text(
-            str,
-            style: new TextStyle(fontSize: 18.0),
-          ),
-          actions: <Widget>[
-             new RaisedButton(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: new Text(
+              str,
+              style: new TextStyle(fontSize: 18.0),
+            ),
+            actions: <Widget>[
+              new RaisedButton(
                 color: Colors.grey[400],
                 child: new Text(
                   "Ok",
@@ -103,10 +134,9 @@ class HomePageState extends State<HomePage> {
                   Navigator.pop(context);
                 },
               ),
-          ],
-        );
-      }
-    );
+            ],
+          );
+        });
   }
 
   void _showDialog() {
@@ -144,19 +174,6 @@ class HomePageState extends State<HomePage> {
           );
         });
   }
-
-  final btnAbsen = RawMaterialButton(
-    onPressed: () {},
-    child: new Icon(
-      Icons.alarm_on,
-      color: Colors.grey[800],
-      size: 100.0,
-    ),
-    shape: new CircleBorder(),
-    elevation: 2.0,
-    fillColor: Colors.orange[300],
-    padding: const EdgeInsets.all(35.0),
-  );
 
   final iconDepan = Container(
     padding: EdgeInsets.only(top: 30.0),
@@ -239,16 +256,20 @@ class HomePageState extends State<HomePage> {
             children: <Widget>[
               RawMaterialButton(
                 onPressed: () {
-                  _showDialog();
+                  if (kondisi == 1) {
+                    _showDialogAbsensi("Anda sudah melakukan absensi hari ini");
+                  } else {
+                    _showDialog();
+                  }
                 },
                 child: new Icon(
-                  Icons.alarm_on,
+                  icon_btn(),
                   color: Colors.grey[800],
                   size: 100.0,
                 ),
                 shape: new CircleBorder(),
                 elevation: 2.0,
-                fillColor: Colors.orange[300],
+                fillColor: color_btn(),
                 padding: const EdgeInsets.all(35.0),
               ),
               iconDepan,
@@ -286,4 +307,10 @@ class Iconteks extends StatelessWidget {
       ),
     );
   }
+}
+
+class StatusAbsensi{
+final int status;
+
+StatusAbsensi(this.status);
 }

@@ -48,12 +48,14 @@ class _LoginPageState extends State<LoginPage> {
       String nipInstance =  listpegawai[0].nip.toString();
       String namaInstance = listpegawai[0].nama.toString();
       String emailInstance = listpegawai[0].email.toString();
+      int status_absenInstance = listpegawai[0].status_absen;
 
       pref = await SharedPreferences.getInstance();
       pref.setString("nip", nipInstance);
       pref.setString("nama", namaInstance);
       pref.setString("email", emailInstance);
       pref.setString("url", url);
+      pref.setInt("status_absen", status_absenInstance);
       pref.commit();
 
       Navigator.pushReplacementNamed(context, HomePage.tag);
