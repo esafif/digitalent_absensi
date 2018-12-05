@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:path/path.dart' as pth;
 
 import 'package:digitalent_absensi/employee.dart';
+import 'package:digitalent_absensi/login_page.dart';
 import 'package:digitalent_absensi/absensi_today.dart';
 import 'package:digitalent_absensi/log_absensi.dart';
 import 'package:digitalent_absensi/notify.dart';
@@ -33,15 +34,14 @@ class HomePageState extends State<HomePage> {
   int kondisi;
   File _image;
 
-  
   Color color_btn_absensi;
   IconData icon_btn_absensi;
 
   color_btn() {
     if (kondisi == 1) {
-      color_btn_absensi = Colors.green[800];
+      color_btn_absensi = Colors.blueGrey[50];
     } else {
-      color_btn_absensi = Colors.orange[300];
+      color_btn_absensi = Colors.orange[200];
     }
     return color_btn_absensi;
   }
@@ -59,7 +59,7 @@ class HomePageState extends State<HomePage> {
     super.initState();
     getCredential();
   }
-  
+
   getCredential() async {
     prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -70,6 +70,29 @@ class HomePageState extends State<HomePage> {
       kondisi = prefs.getInt("status_absen");
     });
   }
+
+  bool progress = false;
+  var progressBar = new Center(
+      child: Container(
+    height: 170.0,
+    width: 240.0,
+    child: Card(
+      color: Colors.transparent,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          CircularProgressIndicator(),
+          SizedBox(
+            height: 10.0,
+          ),
+          Text(
+            "Loading...",
+            style: TextStyle(color: Colors.white),
+          )
+        ],
+      ),
+    ),
+  ));
 
   Future getImage() async {
     var imagefile = await ImagePicker.pickImage(source: ImageSource.camera);
@@ -83,10 +106,25 @@ class HomePageState extends State<HomePage> {
     var compressimg = new File("$path/img_$drawNip.jpeg")
       ..writeAsBytesSync(img.encodeJpg(smallerimg, quality: 85));
 
-    setState(() {
+    //setState(() {
       _image = compressimg;
       print(_image.path);
       upload(_image);
+    //});
+  }
+
+  Future _absenOut() async {
+    final res = await http.post("${url}absenout", body: {"nip": drawNip});
+    var datamsg = json.decode(res.body);
+    setState(() {
+      if (datamsg.length > 0) {
+        prefs.setInt("status_absen", 0);
+        prefs.commit();
+        Navigator.pushReplacementNamed(context, HomePage.tag);
+        _showDialogAbsensi("Absensi keluar berhasil");
+      } else {
+        _showDialogAbsensi("Absensi keluar gagal");
+      }
     });
   }
 
@@ -105,13 +143,16 @@ class HomePageState extends State<HomePage> {
 
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
-      _showDialogAbsensi("Status absensi berhasil");
       prefs.setInt("status_absen", 1);
       prefs.commit();
-      Navigator.pushNamed(context, HomePage.tag);
+      Navigator.pushReplacementNamed(context, HomePage.tag);
+         _showDialogAbsensi("Status absensi berhasil");     
     } else if (response.statusCode == 417) {
-      _showDialogAbsensi("Ini bukan wajah $drawName");
+        _showDialogAbsensi("Ini bukan wajah $drawName");    
     }
+    setState(() {
+      progress = false; 
+    });  
   }
 
   void _showDialogAbsensi(String str) {
@@ -166,7 +207,46 @@ class HomePageState extends State<HomePage> {
                   style: new TextStyle(color: Colors.black),
                 ),
                 onPressed: () {
-                  getImage();
+                  setState(() {
+                    progress = true;
+                    getImage();          
+                  }); 
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  void _showDialogOut() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: new Text(
+              "Apa anda akan melakukan absen keluar?",
+              style: new TextStyle(fontSize: 18.0),
+            ),
+            actions: <Widget>[
+              new RaisedButton(
+                color: Colors.red[200],
+                child: new Text(
+                  "Tidak",
+                  style: new TextStyle(color: Colors.black),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              new RaisedButton(
+                color: Colors.lightBlue[400],
+                child: new Text(
+                  "Ya",
+                  style: new TextStyle(color: Colors.black),
+                ),
+                onPressed: () {
+                  _absenOut();
                   Navigator.pop(context);
                 },
               ),
@@ -197,10 +277,11 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       //Ini bagian AppBar
       appBar: AppBar(
         title: Text("Absensi Project"),
-        backgroundColor: Colors.lightBlue[600],
+        backgroundColor: Colors.blueGrey[50],
       ),
 
       //Ini bagian drawer
@@ -230,12 +311,16 @@ class HomePageState extends State<HomePage> {
                       fit: BoxFit.cover)),
             ),
             new ListTile(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => new employee())),
+              onTap: () => Navigator.of(context).pushNamed(employee.tag),
               title: Text("Employee"),
               trailing: Icon(Icons.people),
             ),
             new ListTile(
+              onTap: () {
+                prefs.clear();
+                prefs.commit();
+                Navigator.pushReplacementNamed(context, LoginPage.tag);
+              },
               title: Text("Sign Out"),
               trailing: Icon(Icons.power_settings_new),
             ),
@@ -245,19 +330,20 @@ class HomePageState extends State<HomePage> {
 
       body: Container(
         decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: FractionalOffset.topCenter,
-                end: FractionalOffset.bottomCenter,
-                colors: [Colors.lightBlue[700], Colors.white30])),
+          image: DecorationImage(
+            image: ExactAssetImage('img/background2.png'),
+            fit: BoxFit.cover
+          )
+        ),
         child: Center(
-          child: ListView(
+          child:progress?progressBar: ListView(
             shrinkWrap: true,
             padding: EdgeInsets.only(left: 24.0, right: 24.0),
             children: <Widget>[
               RawMaterialButton(
                 onPressed: () {
                   if (kondisi == 1) {
-                    _showDialogAbsensi("Anda sudah melakukan absensi hari ini");
+                    _showDialogOut();
                   } else {
                     _showDialog();
                   }
@@ -267,8 +353,8 @@ class HomePageState extends State<HomePage> {
                   color: Colors.grey[800],
                   size: 100.0,
                 ),
-                shape: new CircleBorder(),
-                elevation: 2.0,
+                shape: new CircleBorder( side: BorderSide(color: Colors.blueGrey[400])),
+                elevation: 3.0,
                 fillColor: color_btn(),
                 padding: const EdgeInsets.all(35.0),
               ),
@@ -307,10 +393,4 @@ class Iconteks extends StatelessWidget {
       ),
     );
   }
-}
-
-class StatusAbsensi{
-final int status;
-
-StatusAbsensi(this.status);
 }

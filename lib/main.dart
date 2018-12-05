@@ -3,6 +3,7 @@ import 'login_page.dart';
 import 'home_page.dart';
 import 'employee.dart';
 import 'absensi_today.dart';
+import 'splashscreendepan.dart';
 
 void main() => runApp(MyApp());
 
@@ -13,17 +14,18 @@ class MyApp extends StatelessWidget {
     HomePage.tag: (context)=>HomePage(),
     employee.tag: (context)=> employee(),
     absensiToday.tag: (context) =>absensiToday(),
+    SplashScreenDepan.tag: (context) => SplashScreenDepan(),
   };
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     return MaterialApp(
       title: 'Absensi',
       theme: ThemeData(
         primarySwatch: Colors.lightBlue,
       ),
-      home: LoginPage(),
+      home: SplashScreenDepan(),
       routes: routes,
     );
   }

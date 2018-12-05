@@ -14,6 +14,7 @@ environment:
 
 dependencies:
   http: ^0.12.0
+  splashscreen: any
   image_picker: ^0.4.4
   path_provider: ^0.4.1
   image: ^2.0.4
@@ -45,6 +46,8 @@ flutter:
   - img/logo.png
   - img/ihsan.jpg
   - img/ichsan.jpg
+  - img/splash-screen.png
+  - img/background2.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:digitalent_absensi/home_page.dart';
+import 'home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,47 +11,91 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  var url = "http://04ce791f.ngrok.io/";
-
+  var url = "http://418e8455.ngrok.io/";
   SharedPreferences pref;
   //ctrl textfield
   TextEditingController ctrEmail = new TextEditingController();
   TextEditingController ctrPass = new TextEditingController();
+
+  String drawNip;
+  void initState() {
+    super.initState();
+    ceksession();
+  }
+
+  ceksession() async {
+    pref = await SharedPreferences.getInstance();
+    drawNip = pref.getString("nip");
+    if (drawNip.isNotEmpty) {
+      Navigator.pushReplacementNamed(context, HomePage.tag);
+    }
+    return;
+  }
+
+  bool progress = false;
+  var progressBar = new Center(
+      child: Container(
+    color: Colors.grey[600],
+    height: 170.0,
+    width: 240.0,
+    child: Card(
+      color: Colors.lightBlue[300],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          CircularProgressIndicator(),
+          SizedBox(
+            height: 10.0,
+          ),
+          Text(
+            "Loading...",
+            style: TextStyle(color: Colors.white),
+          )
+        ],
+      ),
+    ),
+  ));
 
   Future<List> _login() async {
     //Map<String, String> headers = new Map<String, String>();
     //headers["Content-type"] = "application/json";
     //headers["Accept"] = "application/json";
     //String str = '{"email":"${ctrEmail.text}", "password","${ctrPass.text}"}';
-
     final res = await http.post(
       "${url}login",
-      body: {
-        "email":ctrEmail.text,
-        "password":ctrPass.text
-      },
+      body: {"email": ctrEmail.text, "password": ctrPass.text},
     );
-
+    
     //final resget = await http.get("http://978952d9.ngrok.io/getpegawai");
     var datauser = json.decode(res.body);
-   
+
     if (datauser.length == 0) {
       setState(() {
         _alertdialog("Akun tidak terdaftar");
       });
     } else {
-      List<Pegawai> listpegawai= [];   
-      for(var u in datauser){
-        Pegawai peg = Pegawai(u['nip'], u['nama'], u['alamat'], u['jabatan'], u['desk_kerja'], u['jenis_kelamin'], u['status_absen'], u['email'], u['password']);
+      List<Pegawai> listpegawai = [];
+      for (var u in datauser) {
+        Pegawai peg = Pegawai(
+            u['nip'],
+            u['nama'],
+            u['alamat'],
+            u['jabatan'],
+            u['desk_kerja'],
+            u['jenis_kelamin'],
+            u['status_absen'],
+            u['email'],
+            u['password']);
         listpegawai.add(peg);
       }
 
-      String nipInstance =  listpegawai[0].nip.toString();
+      String nipInstance = listpegawai[0].nip.toString();
       String namaInstance = listpegawai[0].nama.toString();
       String emailInstance = listpegawai[0].email.toString();
       int status_absenInstance = listpegawai[0].status_absen;
-
       pref = await SharedPreferences.getInstance();
+      
+      setState(() {
       pref.setString("nip", nipInstance);
       pref.setString("nama", namaInstance);
       pref.setString("email", emailInstance);
@@ -59,7 +104,9 @@ class _LoginPageState extends State<LoginPage> {
       pref.commit();
 
       Navigator.pushReplacementNamed(context, HomePage.tag);
+      });
     }
+    progress = false;
   }
 
   void _alertdialog(String str) {
@@ -73,8 +120,11 @@ class _LoginPageState extends State<LoginPage> {
       actions: <Widget>[
         new RaisedButton(
           color: Colors.lightBlue[400],
-          child: new Text("Ok", style: new TextStyle(color: Colors.black),),
-          onPressed: (){
+          child: new Text(
+            "Ok",
+            style: new TextStyle(color: Colors.black),
+          ),
+          onPressed: () {
             Navigator.pop(context);
           },
         )
@@ -124,7 +174,10 @@ class _LoginPageState extends State<LoginPage> {
           minWidth: 200.0,
           height: 42.0,
           onPressed: () {
-            _login();
+            setState(() {
+                 progress = true;  
+                 _login();       
+            });
             //Navigator.of(context).pushNamed(HomePage.tag);
           },
           color: Colors.lightBlueAccent,
@@ -142,35 +195,37 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: FractionalOffset.topRight,
-                end: FractionalOffset.bottomLeft,
-                colors: [Colors.lightBlue[400], Colors.white70])),
-        child: Center(
-          child: ListView(
-            shrinkWrap: true,
-            padding: EdgeInsets.only(left: 24.0, right: 24.0),
-            children: <Widget>[
-              logo,
-              SizedBox(
-                height: 1.0,
+      body: progress
+          ? progressBar
+          : Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: FractionalOffset.topRight,
+                      end: FractionalOffset.bottomLeft,
+                      colors: [Colors.lightBlue[400], Colors.white70])),
+              child: Center(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.only(left: 24.0, right: 24.0),
+                  children: <Widget>[
+                    logo,
+                    SizedBox(
+                      height: 1.0,
+                    ),
+                    email,
+                    SizedBox(
+                      height: 9.0,
+                    ),
+                    password,
+                    SizedBox(
+                      height: 20.0,
+                    ),
+                    loginButton,
+                    forgotLabel
+                  ],
+                ),
               ),
-              email,
-              SizedBox(
-                height: 9.0,
-              ),
-              password,
-              SizedBox(
-                height: 20.0,
-              ),
-              loginButton,
-              forgotLabel
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
@@ -186,5 +241,6 @@ class Pegawai {
   final String email;
   final String password;
 
-  Pegawai(this.nip, this.nama, this.alamat, this.jabatan, this.desk_kerja, this.jenis_kelamin, this.status_absen, this.email, this.password);
+  Pegawai(this.nip, this.nama, this.alamat, this.jabatan, this.desk_kerja,
+      this.jenis_kelamin, this.status_absen, this.email, this.password);
 }
